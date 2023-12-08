@@ -16,14 +16,11 @@ app.use(cookieParser())
 
 
 //routes
-// import userRouter from './routes/user.routes.js'
+import userRouter from './routes/user.routes.js'
 
-// //routes declaration
-// app.use("/api/v1/users",userRouter) //locahost/api/v1/users/*
+//routes declaration
+app.use("/api/v1/users",userRouter) //locahost/api/v1/users/*
 
-app.get("/",(req,res)=>{
-    res.send("hello ")
-})
 
 
 

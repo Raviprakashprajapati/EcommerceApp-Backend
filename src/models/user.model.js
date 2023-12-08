@@ -43,12 +43,11 @@ const userSchema = new mongoose.Schema(
             type:String,
             required:[true,"password is required"]
         },
-        ordersId:[
+        ordersId:
             {
                 type:Schema.Types.ObjectId,
                 ref:"Order"
-            }
-        ],
+            },
         cartsId:
             {
                 type:Schema.Types.ObjectId,
