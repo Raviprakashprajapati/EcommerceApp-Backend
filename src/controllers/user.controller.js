@@ -1,8 +1,32 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { deleteCloudinaryImageUrl, uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
+import jwt from "jsonwebtoken"
+
+const generatedAccessAndRefreshToken = async (userId) => {
+
+    //accessToken can be sent with the response but 
+    //refreshToken save in database to not compare password every time
+
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+
+        return { accessToken, refreshToken }
+
+    } catch (error) {
+
+        throw new ApiError(500, "Something went wrong while generating Tokens")
+
+    }
+}
+
 
 const registerUser = asyncHandler(async (req, res) => {
 
@@ -16,6 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //check for user craetion
     //return resposne
 
+    //7 fields required
     const { name, username, email, password, contact, address } = req.body
 
     if ([name, username, email, password, contact, address].some((field) => field?.trim() === "")) {
@@ -35,15 +60,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const profileImageLocalPath = req.files?.profileImage[0]?.path
 
-    if (!profileImageLocalPath) {
-        throw new ApiError(400, "ProfileImage is required")
-    }
 
-    const profileImage = await uploadOnCloudinary(profileImageLocalPath)
 
-    if (!profileImage) {
-        throw new ApiError(400, "ProfileImage is required")
+    let profileImage;
+    if(profileImageLocalPath){
+         profileImage = await uploadOnCloudinary(profileImageLocalPath)
+        if (!profileImage) {
+            profileImage = null
+            throw new ApiError(400, "Error while uploading profile image")
+        }
     }
+   
 
 
     // console.log(" profileimage  =  ",profileImage)
@@ -54,7 +81,7 @@ const registerUser = asyncHandler(async (req, res) => {
         password,
         contact,
         address,
-        profileImage: profileImage
+        profileImage
     })
 
     const createUser = await User.findById(user._id).select(
@@ -77,46 +104,330 @@ const loginUser = asyncHandler(async (req, res) => {
     //check validatio-empty
     //check user in database
     //check password validity
-    //genrate access token
-    //remove sensitive info from the response
-    //return repsonse with access token
+    //genrate accesstoken and refrehtoken
+    //send to cookies
 
-    const { username, email, password } = req.body;
+    const { email, username, password } = req.body
 
-    if (!username) {
-        throw new ApiError(400, "username is required");
-    }
-    if(!password){ 
-    throw new ApiError(400, "password is required");
-    }
+    console.log("payload ", req.body)
 
+    if (!(username || email)) throw new ApiError(401, "username or email is required")
 
     const user = await User.findOne({
-         username:username.toLowerCase()
+        $or: [{ username }, { email }]
     })
 
-    if(!user){
-        throw new ApiError(401,"User is not exist")
+    if (!user) throw new ApiError(404, "User is not exist")
+
+    //user has a method of bcrypt and jwt
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    if (!isPasswordValid) throw new ApiError(404, "Password is not correct")
+
+    const { accessToken, refreshToken } = await generatedAccessAndRefreshToken(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    //now cookie can only edit by server
+    const options = {
+        httpOnly: true,
+        secure: true
     }
 
-    const isPasswordCorrect = await User.isPasswordCorrect(password)
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser, accessToken, refreshToken
+                },
+                "User loggedIn successfully"
+            )
+        )
 
-    if(!isPasswordCorrect){
-        throw new ApiError(401,"Password is not correct")
-    }
 
-    //generate access token
-    const accessToken = User.generateAccessToken()
-    
-    return response.status(200).json(
-        new ApiResponse(200,{user,accessToken},"Login successfully created")
+})
+
+const logoutUser = asyncHandler(async (req, res) => {
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        },
+        {
+            new: true
+        }
     )
 
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
 
+    return res.status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(
+            new ApiResponse(200, {}, "User logged out")
+        )
 
 
 
 })
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
 
-export { registerUser,loginUser }
+    //get refreshToken from cookies 
+    //decoded token
+    //search decoded Userid from database
+    //compare refreshToken with get database user refreshToken
+    //generate new access and refresh tokens
+    //return new access and refresh tokens
+
+
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized Request ")
+    }
+
+    try {
+
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+        const user = await User.findById(decodedToken?._id)
+
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+
+        if (incomingRefreshToken !== user._id) {
+            throw new ApiError(401, "Refresh Token is expired or used")
+        }
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        const { accessToken, newRefreshToken } = await generatedAccessAndRefreshToken(user._id)
+
+        return res.stats(200)
+            .cookie("accessToken", accessToken)
+            .cookie("refreshToken", newRefreshToken)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, refreshToken: newRefreshToken },
+                    "Acces token Refreshed"
+                )
+            )
+
+    } catch (error) {
+
+        throw new ApiError(401, error?.message)
+    }
+
+})
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+
+    //get oldpassword and newpassword from USER
+    //get _id from auth req.user
+    //compare oldpassword with _id database password
+    //Save newpassword to database
+    //return respond
+
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user.id.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(404, "Invalid password")
+    }
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200).json(
+        new ApiError(200, {}, "Password updated successfully")
+    )
+
+
+
+})
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(
+        new ApiResponse(200, req.user, "Current User Fetched Successfully")
+    )
+})
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+
+    //get which fields need to be updated
+    //check validations
+    //find user by _id and update them
+    //return response
+
+    const { email, name, address, contact } = req.body
+
+    if (!email || !name || !address  || !contact) {
+        throw new ApiError(401, "All Fields Required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                email, name, address, contact
+            }
+        },
+        { new: true }
+    ).select("-password -refreshToken")
+
+    return res.status(200).json(
+        new ApiResponse(200,user,"Fields updated successfully")
+    )
+
+
+
+})
+
+const updateUserAvatar = asyncHandler(async(req,res)=>{
+
+    //get new avatar from req.files?.path
+    //upload newAvatar
+    //find user and update avatar filed with url
+    //return response
+
+    const avatarLocalPath = req.files?.path
+
+    if(!avatarLocalPath){
+        throw new ApiError(401,"Avatar file is missing")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+    if(!avatar){
+        throw new ApiError(400,"Error while uploading avatar")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:{
+                avatar:avatar.url
+            }
+        },
+        {new:true}
+    ).select("-password -refreshToken")
+
+    return res.status(200).json(
+        new ApiResponse(200,user,"Avatar updated successfully")
+    )
+
+})
+
+const deleteCurrentUser = asyncHandler(async(req,res)=>{
+
+    //get _id of user for deleteing it
+    //find user from database
+    //delete from database
+    //return response
+
+    console.log(req.user)
+    const user  = await User.findById(req.user?._id)
+
+    if(!user){
+        throw new ApiError(401,"User does not exist")
+    }
+
+    const imageUrl = user?.profileImage
+    if(imageUrl){
+        deleteCloudinaryImageUrl(imageUrl)
+    }
+
+   const result = await User.deleteOne({_id:user._id})
+
+   if (!result.ok || result.deletedCount === 0) {
+    throw new ApiError(401, "User cannot be deleted");
+    }
+
+    res.clearCookie("refreshToken")
+    res.clearCookie("accessToken")
+
+   return res.status(200).json(
+    new ApiResponse(200,{},"User deleted successfully")
+   )
+
+
+})
+
+
+
+
+//admin section
+const getAllUser = asyncHandler(async(req,res)=>{
+
+    const user = await User.find();
+
+    return res.status(200).json(
+        new ApiResponse(200,user,"All users Fetched successfully")
+    )
+
+})
+
+const deleteSpecificUser = asyncHandler(async(req,res)=>{
+
+    //get _id of user for deleteing it
+    //find user from database
+    //delete from database
+    //return response
+
+    const user  = await User.findById(req.params.id)
+
+    if(!user){
+        throw new ApiError(401,"User does not exist")
+    }
+
+    const imageUrl = user?.profileImage
+    if(imageUrl){
+        deleteCloudinaryImageUrl(imageUrl)
+    }
+
+   const result = await User.deleteOne({_id:user._id})
+
+   if (!result.ok || result.deletedCount === 0) {
+    throw new ApiError(401, "User cannot be deleted");
+}
+
+   return res.status(200).json(
+    new ApiResponse(200,{},"User deleted successfully")
+   )
+
+
+})
+
+
+
+
+
+export { registerUser, 
+        loginUser, 
+        logoutUser, 
+        refreshAccessToken, 
+        changeCurrentPassword, 
+        getCurrentUser,
+        updateAccountDetails,
+        updateUserAvatar,
+        deleteCurrentUser,
+        getAllUser,
+        deleteSpecificUser,
+    }

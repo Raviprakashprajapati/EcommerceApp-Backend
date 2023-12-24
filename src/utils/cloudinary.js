@@ -36,8 +36,25 @@ const uploadOnCloudinary = async (localFilePath)=>{
 }
 
 
+// Function to delete an image by its URL
+const deleteCloudinaryImageUrl = async (imageUrl) => {
+    try {
+      // Extract the public ID from the image URL
+      const publicId = cloudinary.url(imageUrl, { secure: true }).split('/').pop().replace(/\..+$/, '');
+  
+      // Delete the image by its public ID
+      const result = await cloudinary.uploader.destroy(publicId);
+  
+    } 
+    catch (error) {
+      console.error('Error:', error.message);
+    }
+  };
+  
 
-export {uploadOnCloudinary};
+
+
+export {uploadOnCloudinary,deleteCloudinaryImageUrl};
 
 
 

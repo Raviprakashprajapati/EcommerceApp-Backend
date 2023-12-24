@@ -24,21 +24,23 @@ const userSchema = new mongoose.Schema(
             required:true,
             trim:true
         },
-        role:{
-            type:String,
-            default:'customer'
-        },
         address:{
             type:String,
             required:true
-        },
-        profileImage:{
-            type:String //cloudinary Url
         },
         contact:{
             type:String,
             required:true
         },
+
+        role:{
+            type:String,
+            default:'customer' //customer || admin
+        },
+        profileImage:{
+            type:String //cloudinary Url
+        },
+       
         password:{
             type:String,
             required:[true,"password is required"]
@@ -53,6 +55,7 @@ const userSchema = new mongoose.Schema(
                 type:Schema.Types.ObjectId,
                 ref:"Cart"
             },
+            
         refreshToken:{
             type:String
         }
