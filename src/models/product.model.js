@@ -7,72 +7,89 @@ const productSchema = new mongoose.Schema(
             required: true
         },
         price: {
-            type: Number,
-            required: true
-        },
-        stock: {
-            type: Number,
-            default: 0
-        },
-        brand: {
-            type: String
-        },
-        reviews: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Review"
-            }
-        ],
-        category: {
             type: String,
             required: true
         },
-        subCategory:{
-            type:String,
+        discount:{
+            type:String
+        },
+        category: {
+            type: String,
+            enum: ["electronics", "clothing", "furniture", "beauty", "book", "sports", "toys", "health", "software"],
             required: true
         },
-        keywords:[
-            {
-                type:String
-            }
-        ],
-        description: {
-            type: String  //\n every line
+        title: {
+            type: String,
+            required: true
         },
-        images: [
+        subCategory: {
+            type: String,
+            required: true
+        },
+        features:{
+            type:String
+        },
+
+        brand: {
+            type: String
+        },
+        keywords:
+        {
+            type: String
+        },
+        description: 
             {
-                type: String //cloudionary
-            }
-        ],
+                type: String  //\n every line
+            },
+        
+
         warranty: {
             type: Number,
             min: 1,
             max: 5,
             default: 0,
         },
+        age: {
+            type: String,
+            enum: ["old", "new"]
+        },
         trending: {
             type: Boolean,
             default: false,
         },
-        hype:{
+        hype: {
             type: Boolean,
             default: false,
         },
-        offer: [
+        offer:
+            
+                {
+                    type: String //--\n every line
+                },
+            
+        stock: {
+            type: String,
+            required: true
+        },
+        images: [
             {
-            type: String //--\n every line
+                type: String //cloudionary
             }
         ],
-        rating:{
-            type:Number,
-            min:1,
-            max:5,
-            default:0
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5,
+            default: 1
         },
-        age:{
-            type:String,
-            enum:["old","new"]
-        }
+
+        reviews: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Review"
+            }
+        ],
+
     }
     , { timestamps: true });
 
