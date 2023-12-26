@@ -7,7 +7,7 @@ import { Cart } from "../models/cart.model.js";
 import { User } from "../models/user.model.js";
 
 //for admin
-const createProduct = asyncHandler(async (req, res) => {
+const createProductForAdmin = asyncHandler(async (req, res) => {
 
     //get product details from fronted
     //check validation
@@ -58,6 +58,56 @@ const createProduct = asyncHandler(async (req, res) => {
 
 })
 
+//for admin
+const getAllProductForAdmin = asyncHandler(async(req,res)=>{
+
+    const product = await Product.find()
+
+    if(!product){
+        throw new ApiError(500,"Something went wrong while getting all products for admin")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,product,"All products fetched successfully By admin")
+    )
+
+})
+
+//for admin
+const updateProductForAdmin = asyncHandler(async(req,res)=>{
+
+    //get roduct id from params
+    //search for product id in database
+    //use patch to change only speific fields
+
+    const {id} = req.params
+    if(!id){
+        throw new ApiError(401,"Product id is missing")
+    }
+
+    const product = await Product.findByIdAndUpdate(id,
+        {
+            $set:req.body
+        },
+        {new:true}
+        )
+
+    if(!product){
+        throw new ApiError(501,"Something went wrong while updating product by Admin ")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,product,"Product updated successfully")
+    )
+
+})
+
+
+
+
+
+
+
 const getAllProduct = asyncHandler(async (req, res) => {
 
     //get all product from database
@@ -75,6 +125,30 @@ const getAllProduct = asyncHandler(async (req, res) => {
     )
 
 
+
+})
+
+const getProductDetails = asyncHandler(async(req,res)=>{
+
+    //get product id from params
+    //search for this id in database
+    //return response
+
+    const {id} = req.params
+
+    if(!id){
+        throw new ApiError(401,"Product id is missing")
+    }
+
+    const product = await Product.findById(id)
+
+    if(!product){
+        throw new ApiError(404,"Product not found")
+    }
+
+    return response.status(200).json(
+        new ApiResponse(200,product,"Product Details fetched successfully")
+    )
 
 })
 
@@ -176,10 +250,81 @@ const addToCart = asyncHandler(async (req, res) => {
 
 })
 
+const removeFromCart = asyncHandler(async(req,res)=>{
+
+    //verify user by JWT
+    //get produtc id from params
+    //check user has CART ID 
+    //find product id from it AND remove it
+    //DECREMENT totalItems and totalPrice from Cart
+    //increament STOCK of the product
+
+    const {id} = req.params
+    if(!id){
+        throw new ApiError(401,"Product id is missing")
+    }
+
+    const product = await Product.findById(id,"stock price")
+    if(!product){
+        throw new ApiError(401 ,"Product not found" )
+    }
+
+    const {cartsId} = req.user
+    if(!cartsId){
+        throw new ApiError("401","User does not have a Cart")
+    }
+
+    const cart = await Cart.findById(cartsId)
+    if(!cart){
+        throw new ApiError("401","Cart not found")
+    }
+
+    //check if product id is in cart
+    const productIndex = cart.productsId.indexOf(id)
+    if(productIndex === -1){
+        throw new ApiError(404,"Product not found in cart") 
+    }
+
+    //remove product id from cart
+    cart.productsId.splice(productIndex,1);
+
+    //update cart details
+    cart.totalItems-=1
+    cart.totalPrice-=parseInt(product.price)
+
+    await cart.save()
+
+    //incremtn product stock by 1
+    const incrementedProduct = await Product.findByIdAndUpdate(
+        id,
+        {
+            $set:{
+                stock:(parseInt(product.stock)+1).toString()
+            }
+        },
+        {new:true}
+    )
+
+    if(!incrementedProduct){
+        throw new ApiResponse(401,"Something went wrong while incrementing product Stock")
+    }
+
+
+    return res.status(200).json(
+        new ApiResponse(200,{},"Remove From Cart Successful")
+    )
+
+
+})
+
 
 
 export {
-    createProduct,
+    createProductForAdmin,
+    getAllProductForAdmin,
+    updateProductForAdmin,
     getAllProduct,
-    addToCart
+    getProductDetails,
+    addToCart,
+    removeFromCart,
 }
