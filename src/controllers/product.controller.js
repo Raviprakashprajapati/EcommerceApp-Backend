@@ -5,6 +5,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Product } from "../models/product.model.js";
 import { Cart } from "../models/cart.model.js";
 import { User } from "../models/user.model.js";
+import { Review } from "../models/review.mode.js";
+import mongoose from "mongoose";
 
 //for admin
 const createProductForAdmin = asyncHandler(async (req, res) => {
@@ -15,9 +17,6 @@ const createProductForAdmin = asyncHandler(async (req, res) => {
     //upload on cloidinary 
     //create product in database
     //return response
-
-
-
 
     //15 details OR  images need to add 
     const { name, price, category, subCategory, brand, description, warranty, offer, age, trending, keywords, hype, title, stock, features, discount } = req.body
@@ -152,6 +151,7 @@ const getProductDetails = asyncHandler(async(req,res)=>{
 
 })
 
+//carts constrollers
 const addToCart = asyncHandler(async (req, res) => {
 
     //verify JWT user present or not
@@ -317,6 +317,201 @@ const removeFromCart = asyncHandler(async(req,res)=>{
 
 })
 
+const getYourCart = asyncHandler(async(req,res)=>{
+
+    //get cartid from req.user
+    //check if user has not cart any product yet
+    //if user has cartid , check Cart_id from database
+    //return response
+
+    const {cartsId} = req.user
+    if(!cartsId){
+        throw new ApiError(401,"User has not cart any product yet")
+    }
+
+    const cart = await Cart.findById(cartsId)
+    if(!cart){
+        throw new ApiError(401,"user cartid does not exist in Cart database")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,cart,"Cart details Fetched successfully") 
+    )
+
+
+
+})
+
+
+//reviews controllers
+const addReview = asyncHandler(async(req,res)=>{
+
+    //verify user by req.user
+    //get produtcid, content and rating from req.body
+    //check productid exist in product database
+    //create review in Review database and save productid,userid,content,rating 
+    //save reviewId in product reviews[]
+
+    if(!req.user){
+        throw new ApiError(404,"User does not exist")
+    }
+
+    const {productId,comment, rating} = req.body
+    if(!productId || !comment || !rating){
+        throw new ApiError(401,"review field are required")
+    }    
+
+    const reviewBody={
+        userId:req.user._id,
+        username:req.user.username,
+        name:req.user.name,
+        productId:productId,
+        comment:comment.trim(),
+        rating:Number(rating)
+    }
+
+    const product = await Product.findById(productId)
+    if(!product){
+        throw new ApiError(404,"Product not found")
+    }
+
+    const review = await Review.create(reviewBody)
+    if(!review){
+        throw new ApiError(501,"Something went wrong while saving review in database")
+    }
+
+    product.reviews.push(review._id)
+
+    const productUpdated = await product.save()
+    if(!productUpdated){
+        throw new ApiError(501,"Something went wrong while saving pushing reviewId in product database")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,review,"Review created successfully")
+    )
+
+})
+
+const getAllProductReviews = asyncHandler(async(req,res)=>{
+
+    //get productId from req.body
+    //FIND productid in Product database
+    //check if product has a reviews[]
+    //collect all reviews id from product
+    //GO TO REVIEW database find all reviewid adn return
+    //return response
+
+    const {productId} = req.body
+    if(!productId){
+        throw new ApiError(401,"ProductId is required")
+    }
+
+    const product = await Product.findById(productId,"reviews")
+    if(!product){
+        throw new ApiError(404,"Product not found in database")
+    }
+
+    if(!product.reviews || product.reviews.length==0 ){
+        throw new ApiError(401,"Product has no reviews")
+    }
+
+    //collect all reviewsId form product.reviews
+    // let reviewIdArray = []
+    // for (const i of product.reviews) {
+    //     reviewIdArray.push(i)
+    // }
+
+    //NOTE: aggregate function not implicit add Objectid so we need mongoose.Types
+    
+    const allReviews = await Product.aggregate([
+
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(productId)
+            }
+        },
+        {
+            $project:{
+                reviewsId:"$reviews"
+            }
+        },
+        {
+            $unwind:"$reviewsId"
+        },
+        {
+            $lookup:{
+                from:"reviews",
+                localField:"reviewsId",
+                foreignField:"_id",
+                as:"reviewsDetails"
+            }
+        },
+        {
+            $addFields:{
+                reviewsDetails:{
+                    $arrayElemAt:["$reviewsDetails",0]
+                }
+            }
+        },
+        {
+            $project:{
+                reviewsDetails:1
+            }
+        }
+
+
+    ])
+
+    return res.status(200).json(
+        new ApiResponse(200,allReviews,"All reviews Fetched successfully") 
+    )
+
+
+})
+
+const deleteReview = asyncHandler(async(req,res)=>{
+
+    //get reviewid from req.body
+    //search review id from reviews database
+    //delete review from database
+    //corresponding delete reviewId from product.reviews[]
+    //return response
+
+    const {reviewId} = req.body
+    if(!reviewId){
+        throw new ApiError(401,"reviewId is required")
+    }
+    
+    // console.log(req.body)
+    const review = await Review.findByIdAndDelete({_id:reviewId})
+    if(!review){
+        throw new ApiError(401,"Something went wrong while findingWithDeleting review from database")
+    }
+
+    const product = await Product.findOneAndUpdate(
+        {reviews:reviewId},
+        {
+            $pull:{ reviews:reviewId }
+        },
+        { new:true }
+    )
+
+    if(!product){
+        throw new ApiError(401,"Product not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,{},"Review deleted successfully")
+    )
+    
+
+})
+
+
+
+
+
 
 
 export {
@@ -327,4 +522,9 @@ export {
     getProductDetails,
     addToCart,
     removeFromCart,
+    getYourCart,
+    addReview,
+    getAllProductReviews,
+    deleteReview,
+    
 }
