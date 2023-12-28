@@ -1,12 +1,14 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteCloudinaryImageUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Product } from "../models/product.model.js";
 import { Cart } from "../models/cart.model.js";
 import { User } from "../models/user.model.js";
 import { Review } from "../models/review.mode.js";
 import mongoose from "mongoose";
+import { Order } from "../models/order.model.js";
+
 
 //for admin
 const createProductForAdmin = asyncHandler(async (req, res) => {
@@ -101,6 +103,73 @@ const updateProductForAdmin = asyncHandler(async(req,res)=>{
 
 })
 
+//for admin
+const deleteProduct = asyncHandler(async(req,res)=>{
+
+    //gget productid from req.params
+    //check 
+    //FIRST: Cart database has productsId OR not
+    //SECOND: Order database has productid OR not (products.product)
+    //if NOT then 
+    // delete all review from Product.reviews
+    //delete image of product
+    //return response
+
+    const {id} = req.params
+    if(!id){
+        throw new ApiError(401,"Product Id is missing")
+    }
+
+    const cart = await Cart.findOne({productsId:id})
+    if(cart){
+        throw new ApiError(401,"Product cannot be deleted Due to someone already cart it") 
+    }
+
+    const order = await Order.findOne({"products.product":id})
+    if(order){
+        throw new ApiError(401,"Order cannot be deleted Due to someone already order it")
+    }
+    
+    //now delete revviews of product
+
+    const product  = await Product.findOne(id)
+    if(!product){
+        throw new ApiError(401,"Something went wrong while find Product.reviews for deleting the product")
+    }
+    let reviewsId = []
+    for (const i of product.reviews) {
+        reviewsId.push(i)
+    }
+
+    for(const id of reviewsId){
+        const review = await Review.findByIdAndDelete(id)
+        if(!review){
+            throw new ApiError(401,"Something went wrong while deleting reviews for the product deletion")
+        }
+    }
+
+    let imagesUrl = []
+    for(const url of product.images){
+        imagesUrl.push(url)
+    }
+
+    for(const url of imagesUrl){
+        let image = await deleteCloudinaryImageUrl(url)
+    }
+
+    const deletedProduct = await product.remove()
+    if(!deletedProduct){
+        throw new ApiError(501,"Something went wrong while deleting product")
+    }
+
+    
+
+    return res.status(200).json(
+        new ApiResponse(200,{},"Product deleted successfully")
+    )
+
+})
+
 
 
 
@@ -150,6 +219,8 @@ const getProductDetails = asyncHandler(async(req,res)=>{
     )
 
 })
+
+
 
 //carts constrollers
 const addToCart = asyncHandler(async (req, res) => {
@@ -508,6 +579,28 @@ const deleteReview = asyncHandler(async(req,res)=>{
 
 })
 
+const myReviews = asyncHandler(async(req,res)=>{
+
+    //get userId from req.user
+    //find all userid match in Reviews database
+    //return respond
+
+    const {_id} = req.user
+    if(!_id){
+        throw new ApiError(401,"UserId is required")
+    }
+
+    const reviews = await Review.find({userId:_id})
+    if(!reviews){
+        throw new ApiError(401,"There are no reviews")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,reviews,"All reviews are Fetched successfully")
+    )
+
+})
+
 
 
 
@@ -518,6 +611,7 @@ export {
     createProductForAdmin,
     getAllProductForAdmin,
     updateProductForAdmin,
+    deleteProduct,
     getAllProduct,
     getProductDetails,
     addToCart,
@@ -526,5 +620,6 @@ export {
     addReview,
     getAllProductReviews,
     deleteReview,
+    myReviews,
     
 }
