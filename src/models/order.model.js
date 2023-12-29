@@ -2,6 +2,14 @@ import mongoose, { Schema, mongo } from "mongoose";
 
 const orderSchema = new mongoose.Schema(
     {
+        customerName:{
+            type:"String",
+            required:true,
+        },
+        contactNumber:{
+            type:"String",
+            required:true,
+        },
         orderAddress:{
             type:"String",
             required:true
@@ -16,7 +24,7 @@ const orderSchema = new mongoose.Schema(
                     type:String,
                     required:true
                 },
-                product: {
+                productId: {
                     type: Schema.Types.ObjectId,
                     ref: 'Product',
                     required:true
