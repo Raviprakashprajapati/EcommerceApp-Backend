@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { deleteCloudinaryImageUrl, uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import { Admin } from "../models/admin.model.js"
 
 const generatedAccessAndRefreshToken = async (userId) => {
 
@@ -25,6 +26,24 @@ const generatedAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, "Something went wrong while generating Tokens")
 
     }
+}
+
+const generateAccessToken = async(adminUserId)=>{
+
+    //first find AdminId from database
+    //generated JWT TOKEN by admin.generatedAccessToken()
+    //return {accessToken}
+
+    try {
+
+        const admin = await Admin.findById({_id:adminUserId})
+        const accessToken = admin.generateAccessToken()
+        return {accessToken}
+        
+    } catch (error) {
+            throw new ApiError(500,"Something went wrong while generating the token for Admin")
+    }
+
 }
 
 
@@ -101,7 +120,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
 
     //get username,email,password from fronted
-    //check validatio-empty
+    //check validation-empty
     //check user in database
     //check password validity
     //genrate accesstoken and refrehtoken
@@ -109,7 +128,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { email, username, password } = req.body
 
-    console.log("payload ", req.body)
+    // console.log("payload ", req.body)
 
     if (!(username || email)) throw new ApiError(401, "username or email is required")
 
@@ -372,6 +391,110 @@ const deleteCurrentUser = asyncHandler(async(req,res)=>{
 
 
 
+//admin register/login/logout
+const registerAdmin = asyncHandler(async(req,res)=>{
+
+    //get username,email and password
+    //check validation
+    //create admin
+    const {username,email,password} = req.body
+    if(!username || !email || !password){
+        throw new ApiError(401,"All fields is required")
+    }
+
+    const admin = await Admin.create({
+        username,
+        email,
+        password
+    })
+
+    if(!admin){
+        throw new ApiError(500,"Something went wrong while creating Admin ")
+    }
+
+    const registeredAdmin = await Admin.findById(admin._id).select("-password")
+    if(!registeredAdmin){
+        
+        throw new ApiError(500, "Something went wrong while registering Admin")
+    }    
+
+    return res.status(200).json(
+       new ApiResponse( 200,
+        registerAdmin,
+        "admin successfully registered")
+    )
+
+})
+
+const loginAdmin = asyncHandler(async(req,res)=>{
+
+    //get username or emial with password
+    //check validation
+    //check admin in database
+    //compare password using bcrpyt
+    //generate accessToken
+    //send to cookies
+    const {email,username,password} = req.body
+    if(!(username || email)){
+        throw new ApiError(401,"username or email is required")
+    }
+
+    const admin = await Admin.findOne(
+        {
+            $or:[{username},{email}]
+        }
+    )
+    
+    if(!admin){
+        throw new ApiError(404,"Admin does not exist")
+    }
+
+    const isPasswordValid = await admin.isPasswordCorrect(password)
+    if(!isPasswordValid){
+        throw new ApiError(401,"Admin password is not incorrect")
+    }
+
+    const {accessToken } = await generateAccessToken(admin._id)
+
+    const loginAdmin = await Admin.findById(admin._id).select(("-password"))
+
+    const options = {
+        httpOnly:true,
+        secure:true
+    }
+
+    return res.status(200)
+        .cookie("accessToken",accessToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    admin:loginAdmin,
+                    accessToken
+                },
+                "Admin login successfull"
+            )
+        )
+
+})
+
+const logoutAdmin = asyncHandler(async (req, res) => {
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200)
+        .clearCookie("accessToken", options)
+        .json(
+            new ApiResponse(200, {}, "Admin logged out")
+        )
+
+
+
+})
+
 
 //admin section
 const getAllUser = asyncHandler(async(req,res)=>{
@@ -419,7 +542,9 @@ const deleteSpecificUser = asyncHandler(async(req,res)=>{
 
 
 
-export { registerUser, 
+export {
+       
+        registerUser, 
         loginUser, 
         logoutUser, 
         refreshAccessToken, 
@@ -428,6 +553,9 @@ export { registerUser,
         updateAccountDetails,
         updateUserAvatar,
         deleteCurrentUser,
+        registerAdmin,
+        loginAdmin, 
+        logoutAdmin,
         getAllUser,
         deleteSpecificUser,
     }

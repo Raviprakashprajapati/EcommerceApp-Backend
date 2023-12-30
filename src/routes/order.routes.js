@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { addOrder, getAllOrders, getAllOrdersForAdmin, getSingleOrder, removeOrder, updateOrderStatusForAdmin } from "../controllers/order.controller.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 
@@ -11,7 +11,7 @@ router.route("/all-orders").get(verifyJWT,getAllOrders)
 router.route("/get-order/:id").get(verifyJWT,getSingleOrder)
 
 //for admin
-router.route("/admin/orders").get(verifyJWT,authorizationRole("admin"),getAllOrdersForAdmin)
-router.route("/admin/update-order-status/:id").patch(verifyJWT,authorizationRole("admin"),updateOrderStatusForAdmin)
+router.route("/admin/orders").get(verifyJWTAdmin,authorizationRole("admin"),getAllOrdersForAdmin)
+router.route("/admin/update-order-status/:id").patch(verifyJWTAdmin,authorizationRole("admin"),updateOrderStatusForAdmin)
 
 export default router;

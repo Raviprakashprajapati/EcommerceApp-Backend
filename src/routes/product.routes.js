@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { addReview, addToCart, createProductForAdmin, deleteProduct, deleteReview, getAllProduct, getAllProductForAdmin, getAllProductReviews, getProductDetails, getYourCart, myReviews, removeFromCart, updateProductForAdmin } from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
@@ -23,7 +23,7 @@ router.route("/myreviews").get(verifyJWT,myReviews)
 
 //admin role
 router.route("/admin/add-product").post(
-    verifyJWT,
+    verifyJWTAdmin,
     authorizationRole("admin"),
     upload.fields([
         {
@@ -41,9 +41,9 @@ router.route("/admin/add-product").post(
     ]),
     createProductForAdmin
     )
-router.route("/admin/products").get(verifyJWT,authorizationRole("admin"),getAllProductForAdmin)
-router.route("/admin/update-product/:id").patch(verifyJWT,authorizationRole('admin'),updateProductForAdmin)
-router.route("/admin/delete-product/:id").delete(verifyJWT,authorizationRole("admin"),deleteProduct)
+router.route("/admin/products").get(verifyJWTAdmin,authorizationRole("admin"),getAllProductForAdmin)
+router.route("/admin/update-product/:id").patch(verifyJWTAdmin,authorizationRole('admin'),updateProductForAdmin)
+router.route("/admin/delete-product/:id").delete(verifyJWTAdmin,authorizationRole("admin"),deleteProduct)
 
 
 

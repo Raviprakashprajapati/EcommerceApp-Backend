@@ -1,7 +1,7 @@
 import { Router } from "express";
-import {registerUser,loginUser, logoutUser, refreshAccessToken, deleteCurrentUser, changeCurrentPassword, updateAccountDetails, updateUserAvatar, getCurrentUser, getAllUser, deleteSpecificUser} from "../controllers/user.controller.js"
+import {registerUser,loginUser, logoutUser, refreshAccessToken, deleteCurrentUser, changeCurrentPassword, updateAccountDetails, updateUserAvatar, getCurrentUser, getAllUser, deleteSpecificUser, loginAdmin, registerAdmin, logoutAdmin} from "../controllers/user.controller.js"
 import {upload} from "../middlewares/multer.middleware.js"
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 const router = Router()
 
@@ -27,8 +27,11 @@ router.route("/:username").get(verifyJWT,getCurrentUser)
 router.route("/delete-current-user").delete(verifyJWT,deleteCurrentUser)
 
 //admin routess
-router.route("/admin/users").get(verifyJWT,authorizationRole("admin"),getAllUser)
-router.route("/admin/:id").delete(verifyJWT,authorizationRole("admin"),deleteSpecificUser)
+router.route("/admin/register").post(registerAdmin)
+router.route("/admin/login").post(loginAdmin)
+router.route("/admin/logout").post(logoutAdmin)
+router.route("/admin/users").get(verifyJWTAdmin,authorizationRole("admin"),getAllUser)
+router.route("/admin/:id").delete(verifyJWTAdmin,authorizationRole("admin"),deleteSpecificUser)
 
 
 
