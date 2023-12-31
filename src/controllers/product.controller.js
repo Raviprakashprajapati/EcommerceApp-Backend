@@ -4,7 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteCloudinaryImageUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Product } from "../models/product.model.js";
 import { Cart } from "../models/cart.model.js";
-import { User } from "../models/user.model.js";
 import { Review } from "../models/review.mode.js";
 import mongoose from "mongoose";
 import { Order } from "../models/order.model.js";
@@ -120,7 +119,7 @@ const deleteProduct = asyncHandler(async(req,res)=>{
         throw new ApiError(401,"Product Id is missing")
     }
 
-    const cart = await Cart.findOne({productsId:id})
+    const cart = await Cart.findOne({"products.productsId":id})
     if(cart){
         throw new ApiError(401,"Product cannot be deleted Due to someone already cart it") 
     }
@@ -222,196 +221,9 @@ const getProductDetails = asyncHandler(async(req,res)=>{
 
 
 
-//carts constrollers
-const addToCart = asyncHandler(async (req, res) => {
-
-    //verify JWT user present or not
-    //check product is in STOCK or not
-    //check user has CART id or not
-    //craete CART model and add PRODUCT _id in it
-    //DECREMENT STOCK of product 
-    //INCREEMET CART totalItems and totalPrice
-    //add CART _id to USER cartsId
-
-    const { id } = req.params
-
-    if (!id) {
-        throw new ApiError(401, "Product ID is missing")
-    }
-
-    const product = await Product.findById(id, "stock price")
-
-    if (!product) {
-        throw new ApiError(404, "Product not found")
-    }
-
-    if (parseInt(product.stock) == 0) {
-        throw new ApiError(401, "Product is not in Stock")
-    }
-
-    const { cartsId } = req.user
-
-    let cart;
-    
-    if (!cartsId) {
-        //create a new cart due to user does not have cart
-         cart = await Cart.create({
-            userId: req.user._id,
-            productsId: [id],
-            totalItems: 1,
-            totalPrice: parseInt(product.price)
-        })
-
-        if (!cart) {
-            throw new ApiError(401, "Something went wrong while adding productId to NEW CART")
-        }
-
-        //add CartId in user cartsId 
-        const addCartIdToUser =  await User.findByIdAndUpdate(
-            req.user._id,
-            { $set: { cartsId: cart._id } },
-            { new: true }
-        );
-    
-        if (!addCartIdToUser) {
-            throw new ApiError(401, "Error updating user's cartsId");
-        }
-
-    } else {
-        //user has cartid
-         cart = await Cart.findById(req.user?.cartsId)
-
-        if (!cart) {
-            throw new ApiError(401, "Something went wrong while adding product to existing CART")
-        }
-
-        //update cart details
-        cart.productsId.push(id)
-        cart.totalItems += 1
-        cart.totalPrice = cart.totalPrice + parseInt(product.price)
-        await cart.save();
-
-    }
-
-    const decrementProductStock = await Product.findByIdAndUpdate(
-        id,
-        {
-            $set: {
-                stock: (parseInt(product.stock) - 1).toString()
-            }
-        },
-        { new: true }
-    )
-
-    if (!decrementProductStock) {
-        throw new ApiError(401, "Something went wrong while decrementProductStock from database")
-    }
-
-    // if (parseInt(decrementProductStock.stock) < parseInt(product.stock)) {
-    //     throw new ApiError(401, "Something went wrong while decrementProductStock")
-
-    // }
-
-
-    return res.status(200).json(
-        new ApiResponse(200, {}, "Add To Cart")
-    )
 
 
 
-})
-
-const removeFromCart = asyncHandler(async(req,res)=>{
-
-    //verify user by JWT
-    //get produtc id from params
-    //check user has CART ID 
-    //find product id from it AND remove it
-    //DECREMENT totalItems and totalPrice from Cart
-    //increament STOCK of the product
-
-    const {id} = req.params
-    if(!id){
-        throw new ApiError(401,"Product id is missing")
-    }
-
-    const product = await Product.findById(id,"stock price")
-    if(!product){
-        throw new ApiError(401 ,"Product not found" )
-    }
-
-    const {cartsId} = req.user
-    if(!cartsId){
-        throw new ApiError("401","User does not have a Cart")
-    }
-
-    const cart = await Cart.findById(cartsId)
-    if(!cart){
-        throw new ApiError("401","Cart not found")
-    }
-
-    //check if product id is in cart
-    const productIndex = cart.productsId.indexOf(id)
-    if(productIndex === -1){
-        throw new ApiError(404,"Product not found in cart") 
-    }
-
-    //remove product id from cart
-    cart.productsId.splice(productIndex,1);
-
-    //update cart details
-    cart.totalItems-=1
-    cart.totalPrice-=parseInt(product.price)
-
-    await cart.save()
-
-    //incremtn product stock by 1
-    const incrementedProduct = await Product.findByIdAndUpdate(
-        id,
-        {
-            $set:{
-                stock:(parseInt(product.stock)+1).toString()
-            }
-        },
-        {new:true}
-    )
-
-    if(!incrementedProduct){
-        throw new ApiResponse(401,"Something went wrong while incrementing product Stock")
-    }
-
-
-    return res.status(200).json(
-        new ApiResponse(200,{},"Remove From Cart Successful")
-    )
-
-
-})
-
-const getYourCart = asyncHandler(async(req,res)=>{
-
-    //get cartid from req.user
-    //check if user has not cart any product yet
-    //if user has cartid , check Cart_id from database
-    //return response
-
-    const {cartsId} = req.user
-    if(!cartsId){
-        throw new ApiError(401,"User has not cart any product yet")
-    }
-
-    const cart = await Cart.findById(cartsId)
-    if(!cart){
-        throw new ApiError(401,"user cartid does not exist in Cart database")
-    }
-
-    return res.status(200).json(
-        new ApiResponse(200,cart,"Cart details Fetched successfully") 
-    )
-
-
-
-})
 
 
 //reviews controllers
@@ -614,9 +426,6 @@ export {
     deleteProduct,
     getAllProduct,
     getProductDetails,
-    addToCart,
-    removeFromCart,
-    getYourCart,
     addReview,
     getAllProductReviews,
     deleteReview,

@@ -11,11 +11,25 @@ const cartSchema = new mongoose.Schema(
             type:Number,
             default:0
         },
-        productsId:[
+        products:[
             {
-                type:Schema.Types.ObjectId,
-                ref:"Product",
-                required:true
+                productId:{
+                    type:Schema.Types.ObjectId,
+                    ref:"Product",
+                    required:true
+                },
+                productName:{
+                    type:String
+                },
+                productImage:{
+                    type:String
+                },
+                quantity:{
+                    type:Number
+                },
+                price:{
+                    type:Number
+                }
             }
         ],
         totalPrice:{

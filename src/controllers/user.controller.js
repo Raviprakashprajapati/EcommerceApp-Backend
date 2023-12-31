@@ -361,7 +361,7 @@ const deleteCurrentUser = asyncHandler(async(req,res)=>{
     //delete from database
     //return response
 
-    console.log(req.user)
+    // console.log(req.user)
     const user  = await User.findById(req.user?._id)
 
     if(!user){

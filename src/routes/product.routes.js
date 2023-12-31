@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
-import { addReview, addToCart, createProductForAdmin, deleteProduct, deleteReview, getAllProduct, getAllProductForAdmin, getAllProductReviews, getProductDetails, getYourCart, myReviews, removeFromCart, updateProductForAdmin } from "../controllers/product.controller.js";
+import { addReview, createProductForAdmin, deleteProduct, deleteReview, getAllProduct, getAllProductForAdmin, getAllProductReviews, getProductDetails, myReviews, updateProductForAdmin } from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
+import { addToCart, decrementCartProductStock, getYourCart, incrementCartProductStock, removeFromCart } from "../controllers/cart.controller.js";
 
 const router = Router()
 
@@ -12,7 +13,11 @@ router.route("/product/:id").get(getProductDetails)
 
 router.route("/add-to-cart/:id").post(verifyJWT,addToCart)
 router.route("/remove-from-cart/:id").patch(verifyJWT,removeFromCart)
-router.route("/get-cart").get(verifyJWT,getYourCart)
+router.route("/get-cart")
+.get(verifyJWT,getYourCart)
+.patch(verifyJWT,incrementCartProductStock)
+router.route("/decrement-cart")
+.patch(verifyJWT,decrementCartProductStock)
 
 router.route("/add-review").post(verifyJWT,addReview)
 router.route("/reviews")
