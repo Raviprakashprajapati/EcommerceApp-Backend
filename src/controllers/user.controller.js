@@ -5,6 +5,7 @@ import { deleteCloudinaryImageUrl, uploadOnCloudinary } from "../utils/cloudinar
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 import { Admin } from "../models/admin.model.js"
+import { sendRegisterUserEmail } from "../utils/nodeMailer.js"
 
 const generatedAccessAndRefreshToken = async (userId) => {
 
@@ -111,8 +112,15 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering")
     }
 
+    //email
+    const emailSendOrNot = await sendRegisterUserEmail(user,password)
+    let nodeMailer = ""
+    if(emailSendOrNot){
+        nodeMailer = " || Email Send successfully"
+    }
+
     return res.status(201).json(
-        new ApiResponse(200, createUser, "User registered Successfully")
+        new ApiResponse(200, createUser, `User registered Successfully ${nodeMailer}`)
     )
 
 })

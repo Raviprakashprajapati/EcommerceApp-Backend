@@ -181,7 +181,7 @@ const getAllProduct = asyncHandler(async (req, res) => {
     //select only specific feilds
     //return all products
 
-    const products = await Product.find({}).select("-description -offer -stock -rating -reviews ")
+    const products = await Product.find({}).select("-description -offer   -reviews ")
 
     if (!products) {
         throw new ApiError(500, "Error while getting products features")

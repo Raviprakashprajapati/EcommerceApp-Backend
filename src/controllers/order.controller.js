@@ -5,6 +5,7 @@ import { Order } from "../models/order.model.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Cart } from "../models/cart.model.js";
+import { sendOrderCancelEmail, sendOrderConfirmationEmail } from "../utils/nodeMailer.js";
 
 const addOrder = asyncHandler(async (req, res) => {
 
@@ -75,8 +76,16 @@ const addOrder = asyncHandler(async (req, res) => {
     user.ordersId.push(order._id)
     await user.save()
 
+    const emailSendOrNot = await sendOrderConfirmationEmail(req.user?.email,order?._id)
+    let nodeMailer = ""
+    if(emailSendOrNot){
+        nodeMailer=" AND Email Send successfully"
+    }
+    
+    
+
     return res.status(200).json(
-        new ApiResponse(200, order, "Order has been created successfully")
+        new ApiResponse(200, order, `Order has been created successfully ${nodeMailer}`)
     )
 
 
@@ -166,7 +175,10 @@ const removeOrder = asyncHandler(async (req, res) => {
     }
 
 
-
+    const emailSendOrNot = await sendOrderCancelEmail(req.user?.email,orderId)
+   
+    
+   
     return res.status(200).json(
         new ApiResponse(200, {}, "Order has been deleted successfully")
     )
