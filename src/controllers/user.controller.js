@@ -272,7 +272,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
     const { oldPassword, newPassword } = req.body
 
-    const user = await User.findById(req.user.id.user?._id)
+    const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
     if (!isPasswordCorrect) {
@@ -352,7 +352,7 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
         req.user._id,
         {
             $set:{
-                avatar:avatar.url
+                profileImage:avatar
             }
         },
         {new:true}
@@ -385,7 +385,7 @@ const deleteCurrentUser = asyncHandler(async(req,res)=>{
 
    const result = await User.deleteOne({_id:user._id})
 
-   if (!result.ok || result.deletedCount === 0) {
+   if (!result) {
     throw new ApiError(401, "User cannot be deleted");
     }
 
