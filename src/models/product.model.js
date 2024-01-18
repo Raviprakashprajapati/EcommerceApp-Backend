@@ -20,7 +20,7 @@ const productSchema = new mongoose.Schema(
         },
         title: {
             type: String,
-            required: true
+            // required: true
         },
         subCategory: {
             type: String,
@@ -45,7 +45,7 @@ const productSchema = new mongoose.Schema(
 
         warranty: {
             type: Number,
-            min: 1,
+            min: 0,
             max: 5,
             default: 0,
         },

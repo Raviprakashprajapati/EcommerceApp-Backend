@@ -3,6 +3,8 @@ import cors from "cors"
 import cookieParser from 'cookie-parser';
 const app = express();
 
+import { trafficMiddleware } from './middlewares/traffic.middleware.js';
+app.use(trafficMiddleware)
 app.use(cors({
     origin:process.env.CORS_ORIGIN
 }))

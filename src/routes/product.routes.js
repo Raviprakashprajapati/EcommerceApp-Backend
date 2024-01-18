@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
-import { addReview, createProductForAdmin, deleteProduct, deleteReview, getAllProduct, getAllProductForAdmin, getAllProductReviews, getProductDetails, myReviews, updateProductForAdmin } from "../controllers/product.controller.js";
+import { addReview, createProductForAdmin, dashboardCountAdmin, deleteProduct, deleteReview, getAllProduct, getAllProductForAdmin, getAllProductReviews, getProductDetails, myReviews, updateProductForAdmin } from "../controllers/product.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 import { addToCart, decrementCartProductStock, getYourCart, incrementCartProductStock, removeFromCart } from "../controllers/cart.controller.js";
+import { searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
 
 const router = Router()
 
@@ -24,6 +25,15 @@ router.route("/reviews")
 .get(getAllProductReviews)
 .delete(verifyJWT,deleteReview)
 router.route("/myreviews").get(verifyJWT,myReviews)
+
+
+
+//searching routes
+router.route("/search/eletronics").get(searchProductBy_eletronics)
+router.route("/search/clothing").get(searchProductBy_clothing)
+
+
+
 
 
 //admin role
@@ -49,7 +59,7 @@ router.route("/admin/add-product").post(
 router.route("/admin/products").get(verifyJWTAdmin,authorizationRole("admin"),getAllProductForAdmin)
 router.route("/admin/update-product/:id").patch(verifyJWTAdmin,authorizationRole('admin'),updateProductForAdmin)
 router.route("/admin/delete-product/:id").delete(verifyJWTAdmin,authorizationRole("admin"),deleteProduct)
-
+router.route("/admin/dashboard").get(verifyJWTAdmin,authorizationRole("admin"),dashboardCountAdmin)
 
 
 
