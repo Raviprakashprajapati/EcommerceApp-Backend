@@ -4,7 +4,7 @@ import { addReview, createProductForAdmin, dashboardCountAdmin, deleteProduct, d
 import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 import { addToCart, decrementCartProductStock, getYourCart, incrementCartProductStock, removeFromCart } from "../controllers/cart.controller.js";
-import { searchAllCount, searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
+import { searchAllCount, searchProductByReq, searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
 
 const router = Router()
 
@@ -12,6 +12,7 @@ const router = Router()
 router.route("/all-product").get(getAllProduct)
 router.route("/product/:id").get(getProductDetails)
 router.route("/public-dashboard").get(searchAllCount)
+
 
 router.route("/add-to-cart/:id").post(verifyJWT,addToCart)
 router.route("/remove-from-cart/:id").patch(verifyJWT,removeFromCart)
@@ -32,6 +33,7 @@ router.route("/myreviews").get(verifyJWT,myReviews)
 //searching routes
 router.route("/search/eletronics").get(searchProductBy_eletronics)
 router.route("/search/clothing").get(searchProductBy_clothing)
+router.route("/search/req").get(searchProductByReq)
 
 
 

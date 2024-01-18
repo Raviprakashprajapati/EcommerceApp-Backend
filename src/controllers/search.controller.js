@@ -66,9 +66,24 @@ const searchAllCount = asyncHandler(async(req,res)=>{
 })
 
 
+const searchProductByReq = asyncHandler(async(req,res)=>{
+        
+    const product = await Product.find(req.body).limit(10).select("name price category title subCategory brand keywords stock rating images discount")
+    if(!product){
+        throw new ApiError(501,"Product not found")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,product,"All products fetched successfully")
+    )
+
+
+})
+
 
 export {
     searchProductBy_eletronics,
     searchProductBy_clothing,
     searchAllCount,
+    searchProductByReq,
 }
