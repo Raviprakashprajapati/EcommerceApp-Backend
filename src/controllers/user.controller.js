@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 import { Admin } from "../models/admin.model.js"
 import { sendRegisterUserEmail } from "../utils/nodeMailer.js"
+import mongoose from "mongoose"
 
 const generatedAccessAndRefreshToken = async (userId) => {
 
@@ -291,8 +292,19 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
+
+    const id = req.params
+    if(!id){
+        throw new ApiError(501,"User Id not found")
+    }
+    const user = await User.findById({_id:new mongoose.Types.ObjectId(id)})
+    if(!user){
+        throw new ApiError(501,"Error while find current user")
+    }
+
+
     return res.status(200).json(
-        new ApiResponse(200, req.user, "Current User Fetched Successfully")
+        new ApiResponse(200, user, "Current User Fetched Successfully")
     )
 })
 

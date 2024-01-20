@@ -23,7 +23,7 @@ router.route("/refresh-token").post(refreshAccessToken)
 router.route("/change-password").post(verifyJWT,changeCurrentPassword)
 router.route("/update-account").post(verifyJWT,updateAccountDetails)
 router.route("/avatar").patch(verifyJWT,upload.fields([{name:"newAvatar",maxCount:1}]),updateUserAvatar)
-router.route("/:username").get(verifyJWT,getCurrentUser)
+router.route("/current-user/:id").get(verifyJWT,getCurrentUser)
 router.route("/delete-current-user").delete(verifyJWT,deleteCurrentUser)
 
 //admin routess

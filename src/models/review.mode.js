@@ -21,6 +21,9 @@ const reviewSchema = new mongoose.Schema(
         comment:{
             type:String,
         },
+        userImage:{
+            type:String,
+        },
         rating:{
             type:Number,
             min:1,

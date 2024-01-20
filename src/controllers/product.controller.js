@@ -287,7 +287,8 @@ const addReview = asyncHandler(async(req,res)=>{
         name:req.user.name,
         productId:productId,
         comment:comment.trim(),
-        rating:Number(rating)
+        rating:Number(rating),
+        userImage:req.user?.profileImage,
     }
 
     const product = await Product.findById(productId)
@@ -322,7 +323,7 @@ const getAllProductReviews = asyncHandler(async(req,res)=>{
     //GO TO REVIEW database find all reviewid adn return
     //return response
 
-    const {productId} = req.body
+    const {productId} = req.params
     if(!productId){
         throw new ApiError(401,"ProductId is required")
     }
@@ -333,7 +334,9 @@ const getAllProductReviews = asyncHandler(async(req,res)=>{
     }
 
     if(!product.reviews || product.reviews.length==0 ){
-        throw new ApiError(401,"Product has no reviews")
+        return res.status(200).json(
+            new ApiResponse(200,null,"Product has no reviews")
+        )
     }
 
     //collect all reviewsId form product.reviews

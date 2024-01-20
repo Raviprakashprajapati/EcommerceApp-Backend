@@ -309,6 +309,8 @@ const addAllCartToOrder = asyncHandler(async (req, res) => {
         {
             $set: {
                 cartsId: null,
+            },
+            $push:{
                 ordersId: order._id
             }
         },

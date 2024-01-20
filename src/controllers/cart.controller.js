@@ -256,7 +256,7 @@ const incrementCartProductStock = asyncHandler(async(req,res)=>{
 
     const indexOfProductId = cart.products.findIndex(perProduct=>perProduct.productId.equals(new mongoose.Types.ObjectId(productId)))
 
-    if(!indexOfProductId){
+    if(indexOfProductId === -1){
         throw new ApiError(401,"Unable to find productId in Cart")
     }
 
@@ -329,7 +329,7 @@ const decrementCartProductStock = asyncHandler(async(req,res)=>{
 
     const indexOfProductId = cart.products.findIndex(perProduct=>perProduct.productId.equals(new mongoose.Types.ObjectId(productId)))
 
-    if(!indexOfProductId){
+    if(indexOfProductId===-1){
         throw new ApiError(401,"Unable to find productId in Cart")
     }
 

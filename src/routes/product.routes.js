@@ -23,7 +23,7 @@ router.route("/decrement-cart")
 .patch(verifyJWT,decrementCartProductStock)
 
 router.route("/add-review").post(verifyJWT,addReview)
-router.route("/reviews")
+router.route("/reviews/:productId")
 .get(getAllProductReviews)
 .delete(verifyJWT,deleteReview)
 router.route("/myreviews").get(verifyJWT,myReviews)
