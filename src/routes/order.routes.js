@@ -6,7 +6,7 @@ import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 const router = Router()
 
 router.route("/add-order").post(verifyJWT,addOrder)
-router.route("/delete-order").delete(verifyJWT,removeOrder)
+router.route("/delete-order/:orderId").delete(verifyJWT,removeOrder)
 router.route("/all-orders").get(verifyJWT,getAllOrders)
 router.route("/get-order/:id").get(verifyJWT,getSingleOrder)
 router.route("/add-cart-order").post(verifyJWT,addAllCartToOrder)

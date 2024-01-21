@@ -67,8 +67,10 @@ const searchAllCount = asyncHandler(async(req,res)=>{
 
 
 const searchProductByReq = asyncHandler(async(req,res)=>{
-        
-    const product = await Product.find(req.body).limit(10).select("name price category title subCategory brand keywords stock rating images discount")
+    
+    const {subcategory} = req.params
+
+    const product = await Product.find({subCategory:subcategory}).limit(20)
     if(!product){
         throw new ApiError(501,"Product not found")
     }

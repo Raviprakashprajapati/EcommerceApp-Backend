@@ -94,7 +94,7 @@ const addOrder = asyncHandler(async (req, res) => {
 const removeOrder = asyncHandler(async (req, res) => {
 
     //verify user first
-    //get orderId from req.body
+    //get orderId from req.params
     //get productId from order.products[0]?.productId
     //get userId from req.user
     //check Order status first :if pending then delete
@@ -103,7 +103,8 @@ const removeOrder = asyncHandler(async (req, res) => {
     //delete correspond orderid from user.ordersId[]
 
     const { _id } = req.user
-    const { orderId } = req.body
+    const { orderId } = req.params
+    // console.log(orderId)
     if (!orderId) {
         throw new ApiError(401, "OrderId is missing")
     }

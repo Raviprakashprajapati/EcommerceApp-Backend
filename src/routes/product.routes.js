@@ -33,7 +33,7 @@ router.route("/myreviews").get(verifyJWT,myReviews)
 //searching routes
 router.route("/search/eletronics").get(searchProductBy_eletronics)
 router.route("/search/clothing").get(searchProductBy_clothing)
-router.route("/search/req").get(searchProductByReq)
+router.route("/search/req/:subcategory").get(searchProductByReq)
 
 
 
