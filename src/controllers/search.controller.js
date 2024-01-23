@@ -99,10 +99,52 @@ const searchProductByAny = asyncHandler(async(req,res)=>{
 })
 
 
+const searchProductByBar = asyncHandler(async (req, res) => {
+    const { input } = req.params;
+
+    if (!input) {
+        throw new ApiError(401, "Input must be required");
+    }
+
+    const searchString = String(input); // Convert to string
+
+    const product = await Product.find({
+        $or: [
+            { name: { $regex: searchString, $options: 'i' } },
+            { price: { $regex: searchString, $options: 'i' } },
+            { discount: { $regex: searchString, $options: 'i' } },
+            { category: { $regex: searchString, $options: 'i' } },
+            { subCategory: { $regex: searchString, $options: 'i' } },
+            { features: { $regex: searchString, $options: 'i' } },
+            { brand: { $regex: searchString, $options: 'i' } },
+            { keywords: { $regex: searchString, $options: 'i' } },
+         
+        ],
+    }).limit(20)
+
+    if (!product) {
+        throw new ApiError(501, "Error while searching for product");
+    }
+
+    if (product.length === 0) {
+        return res.status(200).json(
+            new ApiResponse(200, null, "There is no product")
+        );
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, product, "Product fetched successfully")
+    );
+});
+
+
+
+
 export {
     searchProductBy_eletronics,
     searchProductBy_clothing,
     searchAllCount,
     searchProductByReq,
     searchProductByAny,
+    searchProductByBar,
 }

@@ -549,7 +549,7 @@ const deleteSpecificUser = asyncHandler(async(req,res)=>{
 
    const result = await User.deleteOne({_id:user._id})
 
-   if (!result.ok || result.deletedCount === 0) {
+   if (!result) {
     throw new ApiError(401, "User cannot be deleted");
 }
 

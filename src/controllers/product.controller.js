@@ -63,7 +63,7 @@ const createProductForAdmin = asyncHandler(async (req, res) => {
 //for admin
 const getAllProductForAdmin = asyncHandler(async(req,res)=>{
 
-    const product = await Product.find()
+    const product = await Product.find().select('name price category title subCategory brand keywords warranty age trending hype stock  rating reviews createdAt updatedAt');
 
     if(!product){
         throw new ApiError(500,"Something went wrong while getting all products for admin")
@@ -203,6 +203,33 @@ const dashboardCountAdmin = asyncHandler(async(req,res)=>{
 
 
 })
+
+
+// const getProductLimitAdmin = asyncHandler(async(req,res)=>{
+
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 20
+
+//     const startIndex = (page-1) * limit;
+//     const endIndex = page*limit;
+
+//     const productCount = await Product.countDocuments();
+
+//     const product = await Product.find().skip(startIndex).limit(limit)
+
+//     if(!product){
+//         throw new ApiError(500,"Error while fetching product by page")
+//     }
+
+//     const pagination = {}
+
+//     if(endIndex<productCount){
+//         pagination.next = {
+//             page=
+//         }
+//     }
+
+// })
 
 
 

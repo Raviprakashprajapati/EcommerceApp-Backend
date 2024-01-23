@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Cart } from "../models/cart.model.js";
 import { sendOrderCancelEmail, sendOrderConfirmationEmail } from "../utils/nodeMailer.js";
+import mongoose from "mongoose";
 
 const addOrder = asyncHandler(async (req, res) => {
 
@@ -384,6 +385,23 @@ const updateOrderStatusForAdmin = asyncHandler(async (req, res) => {
 })
 
 
+const getParticularOrderAdmin = asyncHandler(async(req,res)=>{
+
+    const {orderId} = req.params
+    if(!orderId){
+        throw new ApiError(401,"OrderId not found")
+    }
+
+    const order = await Order.findById({ _id:new mongoose.Types.ObjectId(orderId) })
+    if(!order){
+        throw new ApiError(401,"Error while getting order")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,order,"order fetch success")
+    )
+
+})
 
 
 
@@ -394,5 +412,6 @@ export {
     getSingleOrder,
     addAllCartToOrder,
     getAllOrdersForAdmin,
+    getParticularOrderAdmin,
     updateOrderStatusForAdmin
 }
