@@ -15,4 +15,8 @@ router.route("/add-cart-order").post(verifyJWT,addAllCartToOrder)
 router.route("/admin/orders").get(verifyJWTAdmin,authorizationRole("admin"),getAllOrdersForAdmin)
 router.route("/admin/update-order-status/:id").patch(verifyJWTAdmin,authorizationRole("admin"),updateOrderStatusForAdmin)
 router.route("/admin/orderDetail/:orderId").get(verifyJWTAdmin,authorizationRole("admin"),getParticularOrderAdmin)
+
+
+
 export default router;
+
