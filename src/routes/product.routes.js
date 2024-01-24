@@ -4,7 +4,7 @@ import { addReview, createProductForAdmin, dashboardCountAdmin, deleteProduct, d
 import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 import { addToCart, decrementCartProductStock, getYourCart, incrementCartProductStock, removeFromCart } from "../controllers/cart.controller.js";
-import { searchAllCount, searchProductByAny, searchProductByBar, searchProductByReq, searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
+import { searchAllCount, searchGetAllProduct, searchProductByAny, searchProductByBar, searchProductByReq, searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
 
 const router = Router()
 
@@ -36,6 +36,7 @@ router.route("/search/clothing").get(searchProductBy_clothing)
 router.route("/search/req/:subcategory").get(searchProductByReq)
 router.route("/search/any").post(searchProductByAny)
 router.route("/search/:input").get(searchProductByBar)
+router.route("/search/all-products").get(searchGetAllProduct)
 
 
 

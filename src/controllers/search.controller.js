@@ -100,43 +100,51 @@ const searchProductByAny = asyncHandler(async(req,res)=>{
 
 
 const searchProductByBar = asyncHandler(async (req, res) => {
+    
     const { input } = req.params;
 
     if (!input) {
         throw new ApiError(401, "Input must be required");
     }
 
-    const searchString = String(input); // Convert to string
+    const searchString = String(input).toLowerCase() // Convert to string
 
-    const product = await Product.find({
-        $or: [
-            { name: { $regex: searchString, $options: 'i' } },
-            { price: { $regex: searchString, $options: 'i' } },
-            { discount: { $regex: searchString, $options: 'i' } },
-            { category: { $regex: searchString, $options: 'i' } },
-            { subCategory: { $regex: searchString, $options: 'i' } },
-            { features: { $regex: searchString, $options: 'i' } },
-            { brand: { $regex: searchString, $options: 'i' } },
-            { keywords: { $regex: searchString, $options: 'i' } },
-         
-        ],
-    }).limit(20)
+    const product = await Product.find()
 
+    
     if (!product) {
         throw new ApiError(501, "Error while searching for product");
     }
-
+    
     if (product.length === 0) {
         return res.status(200).json(
             new ApiResponse(200, null, "There is no product")
-        );
-    }
-
+            );
+        }
+    
+    const filterProduct = product.filter((i)=>{
+        return Object.values(i).some((v)=>v && typeof v === 'string' && value.toLowerCase().includes(searchString))
+    })
+   
+   
     return res.status(200).json(
-        new ApiResponse(200, product, "Product fetched successfully")
+        new ApiResponse(200, filterProduct, "Product fetched successfully")
     );
 });
 
+
+const searchGetAllProduct = asyncHandler(async (req, res) =>{
+
+    const products = await Product.find()
+    if(!products){
+        throw new ApiError(501,"Error while fetching products for search ")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200,products,"all products fetched ")
+    )
+
+})
 
 
 
@@ -147,4 +155,5 @@ export {
     searchProductByReq,
     searchProductByAny,
     searchProductByBar,
+    searchGetAllProduct,
 }

@@ -133,7 +133,7 @@ const deleteProduct = asyncHandler(async(req,res)=>{
     
     //now delete revviews of product
 
-    const product  = await Product.findOne(id)
+    const product  = await Product.findById(id)
     if(!product){
         throw new ApiError(401,"Something went wrong while find Product.reviews for deleting the product")
     }
@@ -158,7 +158,7 @@ const deleteProduct = asyncHandler(async(req,res)=>{
         let image = await deleteCloudinaryImageUrl(url)
     }
 
-    const deletedProduct = await product.remove()
+    const deletedProduct = await Product.findByIdAndDelete(id)
     if(!deletedProduct){
         throw new ApiError(501,"Something went wrong while deleting product")
     }
