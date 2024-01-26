@@ -3,6 +3,7 @@ import {registerUser,loginUser, logoutUser, refreshAccessToken, deleteCurrentUse
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
+import { getFeedback, writeFeedback } from "../controllers/feedback.controller.js";
 const router = Router()
 
 //http://localhost:8000/
@@ -33,6 +34,10 @@ router.route("/admin/logout").post(logoutAdmin)
 router.route("/admin/users").get(verifyJWTAdmin,authorizationRole("admin"),getAllUser)
 router.route("/admin/:id").delete(verifyJWTAdmin,authorizationRole("admin"),deleteSpecificUser)
 
+
+//feedback
+router.route("/feedback").post(writeFeedback)
+router.route("/get-feedback").get(getFeedback)
 
 
 export default router;
