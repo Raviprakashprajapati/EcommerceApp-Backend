@@ -5,10 +5,9 @@ import { upload } from "../middlewares/multer.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 import { addToCart, decrementCartProductStock, getYourCart, incrementCartProductStock, removeFromCart } from "../controllers/cart.controller.js";
 import { searchAllCount, searchGetAllProduct, searchProductByAny, searchProductByBar, searchProductByReq, searchProductBy_clothing, searchProductBy_eletronics } from "../controllers/search.controller.js";
-import { corsMiddleware } from "../middlewares/cors.middleware.js";
 
 const router = Router()
-router.use(corsMiddleware)
+
 
 router.route("/all-product").get(getAllProduct)
 router.route("/product/:id").get(getProductDetails)

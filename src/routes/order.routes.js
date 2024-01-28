@@ -2,11 +2,10 @@ import { Router } from "express";
 import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { addAllCartToOrder, addOrder, getAllOrders, getAllOrdersForAdmin, getParticularOrderAdmin, getSingleOrder, removeOrder, updateOrderStatusForAdmin } from "../controllers/order.controller.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
-import { corsMiddleware } from "../middlewares/cors.middleware.js";
 
 const router = Router()
 
-router.use(corsMiddleware)
+
 
 router.route("/add-order").post(verifyJWT,addOrder)
 router.route("/delete-order/:orderId").delete(verifyJWT,removeOrder)
