@@ -6,8 +6,10 @@ const app = express();
 import { trafficMiddleware } from './middlewares/traffic.middleware.js';
 app.use(trafficMiddleware)
 app.use(cors({
-    origin:process.env.CORS_ORIGIN
+    origin:process.env.CORS_ORIGIN,
+    credentials:true,
 }))
+
 
 
 //accept these files and request

@@ -4,7 +4,10 @@ import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT, verifyJWTAdmin } from "../middlewares/auth.middleware.js";
 import { authorizationRole } from "../middlewares/adminAuth.middleware.js";
 import { getFeedback, writeFeedback } from "../controllers/feedback.controller.js";
+import { corsMiddleware } from "../middlewares/cors.middleware.js";
 const router = Router()
+
+router(corsMiddleware)
 
 //http://localhost:8000/
 router.route("/register").post(
