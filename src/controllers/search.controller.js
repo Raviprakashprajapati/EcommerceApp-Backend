@@ -147,6 +147,40 @@ const searchGetAllProduct = asyncHandler(async (req, res) =>{
 })
 
 
+const searchByBetPrice = asyncHandler(async(req,res)=>{
+
+    const {minPrice,maxPrice} = req.body
+    
+    if(!(minPrice || maxPrice)){
+        throw new ApiError(401,"minprice and maxprice must be required")
+    }
+  
+
+      // Query the database using the price range
+  const products = await Product.find().select("-description -features -offer")
+
+    if(!products) {
+        throw new ApiError(501,"Erorr while searhing product with price")
+    }
+
+    
+    const updatedProduct = products.filter((i)=>{
+
+        if(parseFloat(i.price)<parseFloat(maxPrice) && parseFloat(i.price)>parseFloat(minPrice)){
+            return i
+        }
+      
+        
+    })
+
+    return res.status(200).json(
+        new ApiResponse(200,updatedProduct,"Priducts with price range fetched successfully")
+    )
+ 
+    
+})
+
+
 
 export {
     searchProductBy_eletronics,
@@ -156,4 +190,5 @@ export {
     searchProductByAny,
     searchProductByBar,
     searchGetAllProduct,
+    searchByBetPrice,
 }
