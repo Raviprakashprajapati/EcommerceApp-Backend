@@ -149,16 +149,18 @@ const searchGetAllProduct = asyncHandler(async (req, res) =>{
 
 const searchByBetPrice = asyncHandler(async(req,res)=>{
 
-    const {minPrice,maxPrice} = req.body
+    const {minPrice,maxPrice,subCategory} = req.body
     
-    if(!(minPrice || maxPrice)){
+    if(!(minPrice || maxPrice || subCategory)){
         throw new ApiError(401,"minprice and maxprice must be required")
     }
-  
+    
+    // const mp = parseFloat(minPrice)
+    // const maxp = parseFloat(maxPrice)
+
 
       // Query the database using the price range
-  const products = await Product.find().select("-description -features -offer")
-
+  const products = await Product.find({subCategory}).select("-description -features -offer")
     if(!products) {
         throw new ApiError(501,"Erorr while searhing product with price")
     }
